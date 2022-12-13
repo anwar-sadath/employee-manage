@@ -62,18 +62,24 @@
                                 <div class="mb-3">
                                     <label for="name" class="form-label">Name</label>
                                     <input type="text" class="form-control" v-model="name">
+                                    <p class="error-msg" v-if="attemptSubmit && missingName">Name is required.</p>
                                 </div>
                                 <div class="mb-3">
                                     <label for="name" class="form-label">Email</label>
                                     <input type="text" class="form-control" v-model="email">
+                                    <p class="error-msg" v-if="attemptSubmit && missingEmail">Email is required.</p>
+                                    <p class="error-msg" v-if="attemptSubmit && !validEmail">Enter a valid Email.</p>
                                 </div>
                                 <div class="mb-3">
                                     <label for="name" class="form-label">Address</label>
                                     <input type="text" class="form-control" v-model="address">
+                                    <p class="error-msg" v-if="attemptSubmit && missingAddress">Address is required</p>
                                 </div>
                                 <div class="mb-3">
                                     <label for="name" class="form-label">Phone</label>
-                                    <input type="text" class="form-control" v-model="phone">
+                                    <input type="text" class="form-control" v-model="phone"
+                                        @keypress="preventCharacter">
+                                    <p class="error-msg" v-if="attemptSubmit && missingPhone">Phone number required</p>
                                 </div>
                             </form>
                         </div>
@@ -153,7 +159,8 @@ export default {
             selectedIndex: '',
             selectedForEdit: '',
             isShowAdd: true,
-            isShowD: false
+            isShowD: false,
+            attemptSubmit: false
         }
     },
     mounted() {
@@ -164,6 +171,7 @@ export default {
         var vm = this;
         myModalEl.addEventListener('hidden.bs.modal', function (event) {
             vm.isShowAdd = true;
+            vm.attemptSubmit = false;
             vm.clearField();
         })
         alertModal.addEventListener('hidden.bs.modal', function (event) {
@@ -172,6 +180,10 @@ export default {
     },
     methods: {
         addEmployee() {
+            if (!this.name || !this.email || !this.address || !this.phone || this.validEmail == false) {
+                this.attemptSubmit = true;
+                return false;
+            }
             this.employeeList.push(
                 {
                     name: this.name,
@@ -180,14 +192,20 @@ export default {
                     phone: this.phone
                 }
             )
+            this.attemptSubmit = false;
             this.modal.hide();
             this.clearField();
+
         },
         deleteEmployee: function () {
             this.employeeList.splice(this.selectedIndex, 1);
             this.alert.hide()
         },
         update() {
+            if (!this.name || !this.email || !this.address || !this.phone || this.validEmail == false) {
+                this.attemptSubmit = true;
+                return false;
+            }
             if (this.selectedForEdit) {
                 let obj = {
                     name: this.name,
@@ -197,6 +215,7 @@ export default {
                 }
                 const i = this.employeeList.indexOf(this.selectedForEdit)
                 this.employeeList[i] = obj;
+                this.attemptSubmit = false;
                 this.modal.hide();
             }
         },
@@ -230,6 +249,8 @@ export default {
             }
             this.selectedEmpList = [];
             this.alert.hide();
+            var checkedList = document.getElementsByTagName("input");
+            for (var i = 0; i < checkedList.length; ++i) { checkedList[i].checked = false; }
         },
         selectedEmp(emp, index) {
             if (this.selectedEmpList[index] == emp) {
@@ -246,6 +267,19 @@ export default {
             this.email = "";
             this.address = "";
             this.phone = "";
+        },
+        preventCharacter(event) {
+            if (!/^[0-9]+$/.test(event.key) && event.key !== '+') return event.preventDefault();
+        }
+    },
+    computed: {
+        missingName() { return this.name == ''; },
+        missingEmail() { return this.email == ''; },
+        missingAddress() { return this.address == ''; },
+        missingPhone() { return this.phone == ''; },
+        validEmail() {
+            var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+            return re.test(this.email);
         }
     }
 }
@@ -255,7 +289,8 @@ export default {
     color: #ffc107;
 }
 
-.bi-trash {
+.bi-trash,
+.error-msg {
     color: red;
 }
 
