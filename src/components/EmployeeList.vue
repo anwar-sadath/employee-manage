@@ -249,6 +249,8 @@ export default {
             }
             this.selectedEmpList = [];
             this.alert.hide();
+            var checkedList = document.getElementsByTagName("input");
+            for (var i = 0; i < checkedList.length; ++i) { checkedList[i].checked = false; }
         },
         selectedEmp(emp, index) {
             if (this.selectedEmpList[index] == emp) {
